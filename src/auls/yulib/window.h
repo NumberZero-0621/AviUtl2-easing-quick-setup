@@ -130,7 +130,7 @@ class CListView : public CWindow {
 public:
 	int InsertColumn(int i, LV_COLUMN *col)
 	{
-		// V‚µ‚¢ƒJƒ‰ƒ€‚ÌˆÊ’u‚ÌƒCƒ“ƒfƒbƒNƒX‚ğ•Ô‚·
+		// ï¿½Vï¿½ï¿½ï¿½ï¿½ï¿½Jï¿½ï¿½ï¿½ï¿½ï¿½ÌˆÊ’uï¿½ÌƒCï¿½ï¿½ï¿½fï¿½bï¿½Nï¿½Xï¿½ï¿½Ô‚ï¿½
 		return ListView_InsertColumn(hwnd, i, col);
 	}
 

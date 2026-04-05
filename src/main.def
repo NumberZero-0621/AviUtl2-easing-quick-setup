@@ -1,4 +1,7 @@
-LIBRARY easing_quick_setup.auf
+LIBRARY easing_quick_setup.aux2
 
 EXPORTS
-	GetFilterTable @1
+	GetCommonPluginTable @1
+	RegisterPlugin @2
+	InitializePlugin @3
+	UninitializePlugin @4

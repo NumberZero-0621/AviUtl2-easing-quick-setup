@@ -16,47 +16,47 @@
 namespace yulib {\
 
 ////////////////////////////////////////////////////////////////////////////////
-// ŠÖ”‘‚«Š·‚¦ŠÖ”
+// ï¿½Öï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öï¿½
 // 
-// ŽQlƒTƒCƒg
+// ï¿½Qï¿½lï¿½Tï¿½Cï¿½g
 // http://qiita.com/kobake@github/items/8d3d3637c7af0b270098
 ////////////////////////////////////////////////////////////////////////////////
 
 void* RewriteFunction(LPCSTR modname, LPCSTR funcname, void* funcptr)
 {
-	// ƒx[ƒXƒAƒhƒŒƒX
-	DWORD dwBase = (DWORD)GetModuleHandle(modname);
+	// ï¿½xï¿½[ï¿½Xï¿½Aï¿½hï¿½ï¿½ï¿½X
+	DWORD_PTR dwBase = (DWORD_PTR)GetModuleHandle(modname);
 	if(!dwBase) return NULL;
 
-	// ƒCƒ[ƒW—ñ‹“
+	// ï¿½Cï¿½ï¿½ï¿½[ï¿½Wï¿½ï¿½
 	ULONG ulSize;
 	PIMAGE_IMPORT_DESCRIPTOR pImgDesc = (PIMAGE_IMPORT_DESCRIPTOR)ImageDirectoryEntryToData((HMODULE)(intptr_t)dwBase, TRUE, IMAGE_DIRECTORY_ENTRY_IMPORT, &ulSize);
 	for(; pImgDesc->Name; pImgDesc++){
 		//const char* szModuleName = (char*)(intptr_t)(dwBase+pImgDesc->Name);
-		// THUNKî•ñ
+		// THUNKï¿½ï¿½ï¿½
 		PIMAGE_THUNK_DATA pFirstThunk = (PIMAGE_THUNK_DATA)(intptr_t)(dwBase+pImgDesc->FirstThunk);
 		PIMAGE_THUNK_DATA pOrgFirstThunk = (PIMAGE_THUNK_DATA)(intptr_t)(dwBase+pImgDesc->OriginalFirstThunk);
-		// ŠÖ”—ñ‹“
+		// ï¿½Öï¿½ï¿½ï¿½
 		for(;pFirstThunk->u1.Function; pFirstThunk++, pOrgFirstThunk++){
 			if(IMAGE_SNAP_BY_ORDINAL(pOrgFirstThunk->u1.Ordinal))continue;
-			PIMAGE_IMPORT_BY_NAME pImportName = (PIMAGE_IMPORT_BY_NAME)(intptr_t)(dwBase+(DWORD)pOrgFirstThunk->u1.AddressOfData);
+			PIMAGE_IMPORT_BY_NAME pImportName = (PIMAGE_IMPORT_BY_NAME)(intptr_t)(dwBase+(DWORD_PTR)pOrgFirstThunk->u1.AddressOfData);
 
-			// ‘‚«Š·‚¦”»’è
+			// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 			if(_stricmp((const char*)pImportName->Name, funcname) != 0)continue;
 
-			// •ÛŒìó‘Ô•ÏX
+			// ï¿½ÛŒï¿½ï¿½Ô•ÏX
 			DWORD dwOldProtect;
 			if( !VirtualProtect(&pFirstThunk->u1.Function, sizeof(pFirstThunk->u1.Function), PAGE_READWRITE, &dwOldProtect) )
-				return NULL; // ƒGƒ‰[
+				return NULL; // ï¿½Gï¿½ï¿½ï¿½[
 
-			// ‘‚«Š·‚¦
-			void* pOrgFunc = (void*)(intptr_t)pFirstThunk->u1.Function; // Œ³‚ÌƒAƒhƒŒƒX‚ð•Û‘¶‚µ‚Ä‚¨‚­
+			// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+			void* pOrgFunc = (void*)(intptr_t)pFirstThunk->u1.Function; // ï¿½ï¿½ï¿½ÌƒAï¿½hï¿½ï¿½ï¿½Xï¿½ï¿½Û‘ï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½
 			WriteProcessMemory(GetCurrentProcess(), &pFirstThunk->u1.Function, &funcptr, sizeof(pFirstThunk->u1.Function), NULL);
-			pFirstThunk->u1.Function = (DWORD)(intptr_t)funcptr;
+			pFirstThunk->u1.Function = (DWORD_PTR)(intptr_t)funcptr;
 
-			// •ÛŒìó‘Ô–ß‚µ
+			// ï¿½ÛŒï¿½ï¿½Ô–ß‚ï¿½
 			VirtualProtect(&pFirstThunk->u1.Function, sizeof(pFirstThunk->u1.Function), dwOldProtect, &dwOldProtect);
-			return pOrgFunc; // Œ³‚ÌƒAƒhƒŒƒX‚ð•Ô‚·
+			return pOrgFunc; // ï¿½ï¿½ï¿½ÌƒAï¿½hï¿½ï¿½ï¿½Xï¿½ï¿½Ô‚ï¿½
 		}
 	}
 	return NULL;
