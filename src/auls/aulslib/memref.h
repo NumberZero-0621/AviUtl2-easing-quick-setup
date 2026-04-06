@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // aulslib/memref.h
-// ƒƒ‚ƒŠŽQÆ—pƒwƒbƒ_
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Qï¿½Æ—pï¿½wï¿½bï¿½_
 ////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -15,7 +15,7 @@ struct lua_State;
 
 namespace auls {\
 
-static const LPCSTR MEMREF_FILTER_NAME     = TEXT("ƒƒ‚ƒŠŽQÆ");
+static const LPCSTR MEMREF_FILTER_NAME     = TEXT("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Qï¿½ï¿½");
 static const LPCSTR MEMREF_PLUGIN_FILENAME = "auls_memref.auf";
 
 static const int MEMREF_ERRORCODE_GET_MEMORY_FAILED = -1;
@@ -48,7 +48,7 @@ struct LAYER_SETTING;
 	def(CAMERA_ZBUFFER**,    CameraZBuffer, 0x1EC7AC)\
 	def(UNDO_INFO*,          UndoInfo, 0x244E08)
 
-// ƒƒ‚ƒŠŽQÆƒNƒ‰ƒX
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Qï¿½ÆƒNï¿½ï¿½ï¿½X
 class CMemref {
 public:
 	HMODULE module;
@@ -56,7 +56,7 @@ public:
 
 	bool Init(FILTER *fp)
 	{
-		// ƒ‚ƒWƒ…[ƒ‹ƒnƒ“ƒhƒ‹‚ðŽæ“¾
+		// ï¿½ï¿½ï¿½Wï¿½ï¿½ï¿½[ï¿½ï¿½ï¿½nï¿½ï¿½ï¿½hï¿½ï¿½ï¿½ï¿½ï¿½æ“¾
 		if(fp) {
 			FILTER *memref = AviUtl_GetFilter(fp, MEMREF_FILTER_NAME);
 			module = (HMODULE)memref->dll_hinst;
@@ -74,16 +74,16 @@ public:
 	LPCSTR GetErrorString(void)
 	{
 		if(error == MEMREF_ERRORCODE_GET_MEMORY_FAILED) {
-			return "[ƒƒ‚ƒŠŽQÆƒvƒ‰ƒOƒCƒ“]\r\nƒƒ‚ƒŠƒAƒhƒŒƒX‚ÌŽæ“¾‚ÉŽ¸”s‚µ‚Ü‚µ‚½B";
+			return "[ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Qï¿½Æƒvï¿½ï¿½ï¿½Oï¿½Cï¿½ï¿½]\r\nï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Aï¿½hï¿½ï¿½ï¿½Xï¿½ÌŽæ“¾ï¿½ÉŽï¿½ï¿½sï¿½ï¿½ï¿½Ü‚ï¿½ï¿½ï¿½ï¿½B";
 		} else if(module) {
 			LPCSTR (*f)(int) = (LPCSTR(*)(int))GetProcAddress(module, "GetErrorString");
 			if(f) {
 				LPCSTR str = f(error);
 				if(str) return str;
 			}
-			return "[ƒƒ‚ƒŠŽQÆƒvƒ‰ƒOƒCƒ“]\r\nƒGƒ‰[î•ñ‚ðŽæ“¾‚Å‚«‚Ü‚¹‚ñ‚Å‚µ‚½B";
+			return "[ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Qï¿½Æƒvï¿½ï¿½ï¿½Oï¿½Cï¿½ï¿½]\r\nï¿½Gï¿½ï¿½ï¿½[ï¿½ï¿½ï¿½ï¿½ï¿½æ“¾ï¿½Å‚ï¿½ï¿½Ü‚ï¿½ï¿½ï¿½Å‚ï¿½ï¿½ï¿½ï¿½B";
 		} else {
-			return "ƒƒ‚ƒŠŽQÆƒvƒ‰ƒOƒCƒ“‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñ‚Å‚µ‚½B";
+			return "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Qï¿½Æƒvï¿½ï¿½ï¿½Oï¿½Cï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â‚ï¿½ï¿½ï¿½Ü‚ï¿½ï¿½ï¿½Å‚ï¿½ï¿½ï¿½ï¿½B";
 		}
 	}
 

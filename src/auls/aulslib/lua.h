@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // aulslib/lua.h
-// LuaDLL—pƒwƒbƒ_
+// LuaDLLï¿½pï¿½wï¿½bï¿½_
 ////////////////////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -22,15 +22,15 @@ inline DWORD luaA_todword(lua_State *L, int index)
 	return (DWORD)lua_tonumber(L, index);
 }
 
-// index ‚ª•‰‚Ì’l(‘Š‘Îw’è)‚ÌA³‚Ì’l(â‘Îw’è)‚É•ÏŠ·‚·‚é
+// index ï¿½ï¿½ï¿½ï¿½ï¿½Ì’l(ï¿½ï¿½ï¿½Îwï¿½ï¿½)ï¿½Ìï¿½ï¿½Aï¿½ï¿½ï¿½Ì’l(ï¿½ï¿½Îwï¿½ï¿½)ï¿½É•ÏŠï¿½ï¿½ï¿½ï¿½ï¿½
 inline int luaA_positivateindex(lua_State *L, int index)
 {
 	if(index < 0 && index > LUA_REGISTRYINDEX) return lua_gettop(L) + index + 1;
 	else return index;
 }
 
-// index ‚ªw‚·ƒe[ƒuƒ‹“à‚ÉA–¼‘O‚ª <name> ‚Ìƒe[ƒuƒ‹‚ğì¬‚µƒXƒ^ƒbƒN‚ÉÏ‚Ş
-// ‚·‚Å‚É‘¶İ‚µ‚Ä‚¢‚ê‚Î‚»‚ê‚ğƒXƒ^ƒbƒN‚ÉÏ‚Ş
+// index ï¿½ï¿½ï¿½wï¿½ï¿½ï¿½eï¿½[ï¿½uï¿½ï¿½ï¿½ï¿½ï¿½ÉAï¿½ï¿½ï¿½Oï¿½ï¿½ <name> ï¿½Ìƒeï¿½[ï¿½uï¿½ï¿½ï¿½ï¿½ï¿½ì¬ï¿½ï¿½ï¿½Xï¿½^ï¿½bï¿½Nï¿½ÉÏ‚ï¿½
+// ï¿½ï¿½ï¿½Å‚É‘ï¿½ï¿½İ‚ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½Î‚ï¿½ï¿½ï¿½ï¿½ï¿½Xï¿½^ï¿½bï¿½Nï¿½ÉÏ‚ï¿½
 inline void luaA_newtable(lua_State *L, int index, LPCSTR name)
 {
 	index = luaA_positivateindex(L, index);
@@ -44,7 +44,7 @@ inline void luaA_newtable(lua_State *L, int index, LPCSTR name)
 	}
 }
 
-// ƒOƒ[ƒoƒ‹ƒe[ƒuƒ‹“à‚É <libname1> ƒe[ƒuƒ‹‚ğì‚èA‚»‚Ì’†‚É <libname2> ƒe[ƒuƒ‹‚ğì‚èŠÖ”‚ğ“o˜^‚·‚é
+// ï¿½Oï¿½ï¿½ï¿½[ï¿½oï¿½ï¿½ï¿½eï¿½[ï¿½uï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ <libname1> ï¿½eï¿½[ï¿½uï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½Ì’ï¿½ï¿½ï¿½ <libname2> ï¿½eï¿½[ï¿½uï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öï¿½ï¿½ï¿½oï¿½^ï¿½ï¿½ï¿½ï¿½
 inline void luaA_register(lua_State *L, LPCSTR libname1, LPCSTR libname2, const luaL_reg *table)
 {
 	luaA_newtable(L, LUA_GLOBALSINDEX, libname1);
@@ -140,7 +140,7 @@ public:
 		num = lua_objlen(L, index);
 		if(num == 0) return;
 		buf = (T*)malloc(sizeof(T) * num);
-		if(!buf) luaL_error(L, "auls::luaA_TableArgs : ƒƒ‚ƒŠ‚ÌŠm•Û‚É¸”s‚µ‚Ü‚µ‚½B");
+		if(!buf) luaL_error(L, "auls::luaA_TableArgs : ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÌŠmï¿½Û‚Éï¿½ï¿½sï¿½ï¿½ï¿½Ü‚ï¿½ï¿½ï¿½ï¿½B");
 
 		for(int i = 0; i < num; i++) {
 			lua_pushinteger(L, i+1);
