@@ -1,146 +1,82 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include <Windows.h>
-#include <tchar.h>
-#include <stdio.h>
-#include <vector>
 #include <string>
-#include <map>
-#include <tlhelp32.h>
 #include "aviutl2_sdk/include/aviutl2_sdk/plugin2.h"
 
 #define PLUGIN_NAME L"イージング設定時短プラグイン"
-#define PLUGIN_VERSION L"v3.4.0"
+#define PLUGIN_VERSION L"v3.4.1 (Optimized)"
 #define PLUGIN_DEVELOPER L"No.0 (Original: 蝙蝠 of Eye)"
 
-static std::vector<DWORD> g_hooked_tids;
-static std::vector<HHOOK> g_hooks;
-static DWORD g_last_action_time = 0;
-static std::map<HWND, std::wstring> g_prev_texts;
+static HHOOK g_hGetMsg = NULL;
+static HHOOK g_hCallWnd = NULL;
+static std::wstring g_last_hovered_menu_text = L"";
+static bool g_pending_easing_check = false;
 
-void Log(const char *format, ...) {
-  char buf[2048];
-  va_list args;
-  va_start(args, format);
-  vsprintf(buf, format, args);
-  va_end(args);
-  OutputDebugStringA(buf);
-}
+// 1. SendMessage系を監視するフック (メニュー操作の監視)
+LRESULT CALLBACK HookProc_CallWnd(int nCode, WPARAM wParam, LPARAM lParam) {
+    if (nCode >= 0) {
+        CWPSTRUCT* cwp = (CWPSTRUCT*)lParam;
 
-void PhysicalClick(HWND hwnd) {
-    if (!IsWindow(hwnd)) return;
-    RECT r; GetClientRect(hwnd, &r);
-    int x = (r.left + r.right) / 2;
-    int y = (r.top + r.bottom) / 2;
-    SendMessage(hwnd, WM_ACTIVATE, WA_ACTIVE, 0);
-    PostMessage(hwnd, WM_LBUTTONDOWN, MK_LBUTTON, MAKELPARAM(x, y));
-    PostMessage(hwnd, WM_LBUTTONUP, 0, MAKELPARAM(x, y));
-}
+        if (cwp->message == WM_MENUSELECT) {
+            UINT uItem = LOWORD(cwp->wParam);
+            UINT fuFlags = HIWORD(cwp->wParam);
+            HMENU hMenu = (HMENU)cwp->lParam;
 
-void DoBroadHuntFrom(HWND hEdit) {
-    DWORD now = GetTickCount();
-    if (now - g_last_action_time < 1000) return;
-    g_last_action_time = now;
-
-    Log("EQS: ACTION: State change detected. Triggering hunter...");
-    
-    // 入力欄の ID を取得
-    int id = (int)GetWindowLongPtr(hEdit, GWLP_ID);
-    
-    // 候補1: ID+1
-    HWND hNext = GetDlgItem(GetParent(hEdit), id + 1);
-    if (id != 0 && hNext && IsWindowVisible(hNext)) {
-        Log("EQS: HUNTER: Clicking by ID+1: %p", hNext);
-        PhysicalClick(hNext);
-    } else {
-        // 候補2: 物理座標エイム (右 10px)
-        RECT r; GetWindowRect(hEdit, &r);
-        POINT pt = { r.right + 10, r.top + (r.bottom - r.top) / 2 };
-        HWND hTarget = WindowFromPoint(pt);
-        if (hTarget && hTarget != hEdit) {
-            Log("EQS: HUNTER: Clicking Neighbor via Coordinates: %p", hTarget);
-            PhysicalClick(hTarget);
+            if (fuFlags != 0xFFFF && hMenu != NULL && !(fuFlags & MF_POPUP)) {
+                WCHAR text[256] = {0};
+                if (GetMenuStringW(hMenu, uItem, text, 256, MF_BYCOMMAND) > 0) {
+                    g_last_hovered_menu_text = text;
+                }
+            }
+        }
+        else if (cwp->message == WM_UNINITMENUPOPUP) {
+            g_pending_easing_check = true;
         }
     }
+    return CallNextHookEx(NULL, nCode, wParam, lParam);
 }
 
-// 状態監視 (ポーリング)
-void PollingHunter() {
-  for (DWORD tid : g_hooked_tids) {
-    EnumThreadWindows(tid, [](HWND hTop, LPARAM lp) -> BOOL {
-      if (!IsWindowVisible(hTop)) return TRUE;
-      EnumChildWindows(hTop, [](HWND hwnd, LPARAM lp) -> BOOL {
-        // 全コントロールのテキストを抜き出す (W版)
-        WCHAR title[256] = {0};
-        GetWindowTextW(hwnd, title, 256);
-        if (wcsstr(title, L"easing") && wcsstr(title, L"@")) {
-           std::wstring current = title;
-           if (g_prev_texts.count(hwnd) && g_prev_texts[hwnd] != current) {
-               Log("EQS: STATE CHANGE detected on %p: '%ls' -> '%ls'", hwnd, g_prev_texts[hwnd].c_str(), current.c_str());
-               g_prev_texts[hwnd] = current;
-               DoBroadHuntFrom(hwnd);
-           } else {
-               g_prev_texts[hwnd] = current;
-           }
-        }
-        return TRUE;
-      }, 0);
-      return TRUE;
-    }, 0);
-  }
-}
-
+// 2. PostMessage系を監視するフック (UI更新完了の監視)
 LRESULT CALLBACK HookProc_GetMsg(int nCode, WPARAM wParam, LPARAM lParam) {
-  return CallNextHookEx(NULL, nCode, wParam, lParam);
-}
+    if (nCode >= 0) {
+        MSG* msg = (MSG*)lParam;
 
-void UpdateHooks() {
-  DWORD pid = GetCurrentProcessId();
-  HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
-  if (hSnapshot != INVALID_HANDLE_VALUE) {
-    THREADENTRY32 te = {sizeof(te)};
-    if (Thread32First(hSnapshot, &te)) {
-      do {
-        if (te.th32OwnerProcessID == pid) {
-          bool already = false;
-          for (DWORD tid : g_hooked_tids) if (tid == te.th32ThreadID) { already = true; break; }
-          if (!already) {
-            g_hooks.push_back(SetWindowsHookEx(WH_GETMESSAGE, HookProc_GetMsg, NULL, te.th32ThreadID));
-            g_hooked_tids.push_back(te.th32ThreadID);
-            Log("EQS: New Thread Hooked: %lu", te.th32ThreadID);
-          }
+        if (msg->message == WM_USER && g_pending_easing_check) {
+            g_pending_easing_check = false; 
+
+            if (g_last_hovered_menu_text.find(L"easing") != std::wstring::npos &&
+                g_last_hovered_menu_text.find(L"@") != std::wstring::npos) {
+                
+                // 検証用ポップアップ
+                MessageBoxW(msg->hwnd, 
+                            (L"イージングスクリプトが選択されました！\n項目: " + g_last_hovered_menu_text).c_str(), 
+                            L"Easing Quick Setup (Confirmed)", 
+                            MB_OK | MB_ICONINFORMATION | MB_TOPMOST);
+            }
         }
-      } while (Thread32Next(hSnapshot, &te));
     }
-    CloseHandle(hSnapshot);
-  }
-}
-
-void CALLBACK TimerProc(HWND, UINT, UINT_PTR, DWORD) {
-    static int heartbeat_counter = 0;
-    if (++heartbeat_counter >= 10) { // 約 2秒おき
-        Log("EQS: Heartbeat - Polling %d targets.", (int)g_prev_texts.size());
-        UpdateHooks();
-        heartbeat_counter = 0;
-    }
-    PollingHunter();
+    return CallNextHookEx(NULL, nCode, wParam, lParam);
 }
 
 extern "C" {
 __declspec(dllexport) COMMON_PLUGIN_TABLE *GetCommonPluginTable(void) {
-  static COMMON_PLUGIN_TABLE table = {PLUGIN_NAME, PLUGIN_NAME L" " PLUGIN_VERSION L" by " PLUGIN_DEVELOPER};
-  return &table;
+    static COMMON_PLUGIN_TABLE table = {PLUGIN_NAME, PLUGIN_NAME L" " PLUGIN_VERSION L" by " PLUGIN_DEVELOPER};
+    return &table;
 }
+
 __declspec(dllexport) void RegisterPlugin(HOST_APP_TABLE *host) {
 }
+
 __declspec(dllexport) bool InitializePlugin(DWORD version) {
-  Log("EQS: Plugin Loaded v3.4.0 (Polling mode).");
-  g_hooked_tids.clear();
-  UpdateHooks();
-  // 200ms おきにポーリング
-  SetTimer(NULL, 0, 200, TimerProc);
-  return true;
+    // UIスレッドに対してのみフックを登録
+    DWORD tid = GetCurrentThreadId();
+    g_hGetMsg = SetWindowsHookEx(WH_GETMESSAGE, HookProc_GetMsg, NULL, tid);
+    g_hCallWnd = SetWindowsHookEx(WH_CALLWNDPROC, HookProc_CallWnd, NULL, tid);
+    return true;
 }
+
 __declspec(dllexport) void UninitializePlugin() {
-  for (auto h : g_hooks) { if (h) UnhookWindowsHookEx(h); }
+    if (g_hGetMsg) UnhookWindowsHookEx(g_hGetMsg);
+    if (g_hCallWnd) UnhookWindowsHookEx(g_hCallWnd);
 }
 }
