@@ -108,32 +108,14 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\dbgstream\dbgstream.cpp" />
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="src\main.def" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\auls\aulslib\aviutl.h" />
-    <ClInclude Include="src\auls\aulslib\exedit.h" />
-    <ClInclude Include="src\auls\aulslib\lua.h" />
-    <ClInclude Include="src\auls\aulslib\memref.h" />
-    <ClInclude Include="src\dbgstream\dbgstream.h" />
-    <ClInclude Include="src\aviutl_plugin_sdk\filter.h" />
-    <ClInclude Include="src\auls\yulib\color.h" />
-    <ClInclude Include="src\auls\yulib\extra.h" />
-    <ClInclude Include="src\auls\yulib\file.h" />
-    <ClInclude Include="src\auls\yulib\gdi.h" />
-    <ClInclude Include="src\auls\yulib\generic.h" />
-    <ClInclude Include="src\auls\yulib\memory.h" />
-    <ClInclude Include="src\auls\yulib\path.h" />
-    <ClInclude Include="src\auls\yulib\string.h" />
-    <ClInclude Include="src\auls\yulib\window.h" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="src\auls\auls.txt" />
-    <Text Include="src\dbgstream\LICENSE.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
